@@ -1,0 +1,60 @@
+local old_soulslike_actor_on_before_death = soulslike.actor_on_before_death
+function soulslike.actor_on_before_death(who, flags)
+    if not IsSoulslikeMode() then
+        return
+    end
+
+    -- Pretty sure this fixes arena fights, still need to test
+    if has_alife_info("bar_arena_fight") then
+        debug('Actor was in an arena fight, ignoring death.')
+        return
+    end
+
+    local soulslike_data = soulslike.get_soulslike_state()
+
+    local uuid = soulslike_data.uuid
+
+    local fs = getFS()
+    local flist = fs:file_list_open_ex("$game_saves$",bit_or(FS.FS_ListFiles,FS.FS_RootOnly),"*.scoc")
+    local f_cnt = flist:Size()
+
+    for	it=0, f_cnt-1 	do
+        local file = flist:GetAt(it)
+        local file_name = string.sub(file:NameFull(), 0, (string.len(file:NameFull()) - string.len(".scoc")))
+
+        local path = fs:update_path('$game_saves$', '')..file_name..".scoc"
+        local f = io.open(path,"rb")
+        if (f) then
+            local data = f:read("*all")
+            f:close()
+            if (data) then
+                local decoded = alife_storage_manager.decode(data)
+                local d_soulslike = decoded and decoded.soulslike
+                if (d_soulslike and (d_soulslike.uuid == uuid) and d_soulslike.death_count) then
+                    d_soulslike.death_count = d_soulslike.death_count + 1
+                    --printf("/ Soulslike mode | file: %s - death_count: %s", file_name, d_soulslike.death_count)
+                    local f = io.open(path,"wb")
+                    if (f) then
+                        local encoded = marshal.encode(decoded)
+                        if (encoded) then
+                            f:write(encoded)
+                        end
+                        f:close()
+                    end
+                end
+            end
+        end
+    end
+    soulslike_data.death_count = soulslike_data.death_count + 1
+    old_soulslike_actor_on_before_death(who, flags)
+end
+
+local old_soulslike_get_soulslike_state = soulslike.get_soulslike_state
+function soulslike.get_soulslike_state()
+    local data = old_soulslike_get_soulslike_state()
+    if not data.death_count then
+        data.death_count = 0
+        data.uuid = GAME_VERSION .. "_" .. tostring(math.random(100)) .. tostring(math.random()) .. tostring(math.random(1000))
+    end
+    return data
+end

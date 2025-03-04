@@ -1,0 +1,19 @@
+local old_game_achievements_invictus_requirements = game_achievements.invictus_requirements
+function game_achievements.invictus_requirements()
+    printf("is souls %s", IsSoulslikeMode())
+    if IsSoulslikeMode() then
+        local data = soulslike.get_soulslike_state()
+        return (
+                not (has_alife_info("story_mode_disabled"))
+                and (has_alife_info("operation_afterglow_complete"))
+                and data.death_count == 0
+                and (game_difficulties.get_game_factor("type") == 3)
+                and (game_difficulties.get_eco_factor("type") == 3)
+                and not (has_alife_info("diff_gameplay_flag_change"))
+                and not (has_alife_info("diff_economy_flag_change"))
+                and not (has_alife_info("debug_mode_flag_on"))
+        )
+    end
+    return game_achievements.invictus_requirements_old()
+end
+
