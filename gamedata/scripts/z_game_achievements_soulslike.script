@@ -1,6 +1,5 @@
 local old_game_achievements_invictus_requirements = game_achievements.invictus_requirements
 function game_achievements.invictus_requirements()
-    printf("is souls %s", IsSoulslikeMode())
     if IsSoulslikeMode() then
         local data = soulslike.get_soulslike_state()
         return (
