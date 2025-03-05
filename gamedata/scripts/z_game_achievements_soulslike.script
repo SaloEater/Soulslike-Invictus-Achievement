@@ -14,6 +14,6 @@ function game_achievements.invictus_requirements()
                 and not (has_alife_info("debug_mode_flag_on"))
         )
     end
-    return game_achievements.invictus_requirements_old()
+    return old_game_achievements_invictus_requirements()
 end
 
